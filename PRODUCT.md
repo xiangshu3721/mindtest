@@ -8,11 +8,11 @@ web
 
 ## Users
 
-一个人在自己的设备上，从四份自评里选一份来做。
+一个人在自己的设备上，从这些自评里选一份来做。
 
 ## Product Purpose
 
-把已有的四份自评收成一张目录，点开一张只做这一份。成功是找得到对应的测试并进入它。
+把已有的自评收成一张目录，点开一张只做这一份。成功是找得到对应的测试并进入它。
 
 ## Operating Context
 
@@ -26,6 +26,7 @@ web
 2. 人格障碍筛查 PDQ-4（126 题，筛查，不是诊断）→ `pdq/index.html`
 3. 成人依恋关系测评（36 题）→ `ecr/index.html`
 4. 寻根之旅 · 原生家庭考古 → `https://xiangshu3721.github.io/root-journey-web/`
+5. 爱的 5 种语言（30 题）→ `https://xiangshu3721.github.io/5loves/`
 
 每张卡片有对应的静物图、标题和一句介绍。SCL-90 从已提交的版本恢复到 `scl90/`。
 
