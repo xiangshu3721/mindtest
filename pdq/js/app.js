@@ -1,3 +1,5 @@
+import { mountPdq4Cloud } from "./cloud-kit.js";
+import { pdq4Nickname } from "./cloud-payload.js";
 import {
   CLUSTERS,
   CONDUCT_ITEMS,
@@ -16,6 +18,7 @@ const STORAGE = "pdq4-session";
 
 const state = {
   step: "cover",
+  nickname: "",
   index: 0,
   answers: Array(QUESTIONS.length).fill(null),
   times: Array(QUESTIONS.length).fill(null),
@@ -36,6 +39,7 @@ function load() {
     state.times = Array.isArray(saved.times) && saved.times.length === QUESTIONS.length
       ? saved.times
       : state.times;
+    state.nickname = pdq4Nickname(saved.nickname);
     state.index = Number.isInteger(saved.index) ? Math.min(saved.index, QUESTIONS.length - 1) : 0;
     state.step = saved.step || "cover";
     state.rushed = Boolean(saved.rushed);
@@ -52,6 +56,7 @@ function load() {
 function save() {
   sessionStorage.setItem(STORAGE, JSON.stringify({
     step: state.step,
+    nickname: state.nickname,
     index: state.index,
     answers: state.answers,
     times: state.times,
@@ -90,6 +95,24 @@ function render() {
     report: renderReport,
   }[state.step];
   app.innerHTML = view();
+  if (state.step === "report" && state.result) mountReportCloud();
+}
+
+function mountReportCloud() {
+  const slot = app.querySelector("[data-cloud-slot]");
+  if (!slot) return;
+  mountPdq4Cloud(slot, {
+    nickname: state.nickname,
+    answers: state.answers.slice(),
+    rushed: state.rushed,
+  });
+}
+
+function readNickname() {
+  const input = app.querySelector("#nick");
+  if (input) state.nickname = input.value;
+  state.nickname = pdq4Nickname(state.nickname);
+  return state.nickname;
 }
 
 function shell(inner) {
@@ -113,8 +136,14 @@ function renderCover() {
       <span>过去几年</span>
       <span>约 15 分钟</span>
     </div>
+    <div class="nick">
+      <label for="nick">怎么称呼你</label>
+      <input id="nick" name="nick" type="text" maxlength="12" autocomplete="off" enterkeyhint="done" value="${esc(state.nickname)}" />
+      <p class="sub">最多 12 个字。这个称呼会写进分享链接，不收集性别和年龄。</p>
+    </div>
+    <p class="hint">${esc(state.error)}</p>
     <div class="actions">${resume}</div>
-    <p class="fine">作答和计分都留在这台设备上，不会上传。冲动的 6 个小项、15 岁前的 15 个小项，会各自合成 1 分后再计入边缘型和反社会型。</p>
+    <p class="fine">计分留在这台设备上，报告也可以打印。进入结果页后会准备一条阅读链接，点「分享结果」才会复制。冲动的 6 个小项、15 岁前的 15 个小项，会各自合成 1 分后再计入边缘型和反社会型。这是筛查，不是诊断。</p>
   `);
 }
 
@@ -250,11 +279,28 @@ function renderReport() {
       <summary>查看 126 题的作答</summary>
       <ol>${ledger}</ol>
     </details>
+    <div data-cloud-slot></div>
     <div class="actions">
       <button class="ghost" type="button" data-action="restart">重新测评</button>
       <button class="ghost" type="button" data-action="print">打印报告</button>
     </div>
   `);
+}
+
+function begin(resetIndex) {
+  const name = readNickname();
+  if (!name) {
+    state.error = "先写一个称呼，再开始。";
+    save();
+    render();
+    const field = app.querySelector("#nick");
+    if (field) field.focus();
+    return;
+  }
+  state.nickname = name;
+  state.error = "";
+  if (resetIndex) state.index = 0;
+  go("test");
 }
 
 function go(step) {
@@ -318,15 +364,24 @@ function finish() {
   go("report");
 }
 
+app.addEventListener("input", (event) => {
+  const input = event.target;
+  if (!input || input.id !== "nick") return;
+  state.nickname = input.value;
+  if (state.error) {
+    state.error = "";
+    const hint = app.querySelector(".hint");
+    if (hint) hint.textContent = "";
+  }
+  save();
+});
+
 app.addEventListener("click", (event) => {
   const button = event.target.closest("[data-action]");
   if (!button || button.disabled) return;
   const action = button.dataset.action;
-  if (action === "start") {
-    state.index = 0;
-    go("test");
-  }
-  if (action === "resume") go("test");
+  if (action === "start") begin(true);
+  if (action === "resume") begin(false);
   if (action === "answer") choose(Number(button.dataset.value));
   if (action === "prev" && state.index > 0) {
     advanceToken += 1;
@@ -363,6 +418,7 @@ app.addEventListener("click", (event) => {
   if (action === "restart") {
     sessionStorage.removeItem(STORAGE);
     state.step = "cover";
+    state.nickname = "";
     state.index = 0;
     state.answers = Array(QUESTIONS.length).fill(null);
     state.times = Array(QUESTIONS.length).fill(null);
@@ -376,6 +432,12 @@ app.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (state.step === "cover" && event.key === "Enter" && event.target && event.target.id === "nick") {
+    event.preventDefault();
+    const answered = state.answers.filter((value) => value === 0 || value === 1).length;
+    begin(answered === 0 || answered === QUESTIONS.length);
+    return;
+  }
   if (state.step !== "test") return;
   if (event.metaKey || event.ctrlKey || event.altKey) return;
   if (event.key === "1" || event.key === "y" || event.key === "Y") {
@@ -420,6 +482,7 @@ if (preview) {
     });
   }
   state.answers = answers;
+  if (!pdq4Nickname(state.nickname)) state.nickname = "预览";
   state.times = answers.map((_, index) => Date.now() + index * (preview === "rush" ? 200 : 2000));
   state.rushed = false;
   state.result = scorePdq4(answers);
