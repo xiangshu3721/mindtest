@@ -498,5 +498,5 @@ h2 { font-size: 28px; margin: 28px 0 6px; }
 @media print {
   body { background: white; }
   .sheet { box-shadow: none; border: none; }
-  .actions, .nav, .primary, .ghost { display: none !important; }
+  .actions, .nav, .primary, .ghost, .sc-share { display: none !important; }
 }

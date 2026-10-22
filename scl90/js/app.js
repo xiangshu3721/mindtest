@@ -1,3 +1,4 @@
+import { mountScl90Cloud } from "./cloud-kit.js";
 import { AGES, FACTORS, OPTIONS, QUESTIONS, SCALE } from "./data.js";
 import { formatScore, rushCheck, scoreScl90 } from "./score.js";
 
@@ -92,8 +93,19 @@ function render() {
     report: renderReport,
   }[state.step];
   app.innerHTML = view();
+  if (state.step === "report" && state.result) mountReportCloud();
   const focus = app.querySelector("[data-autofocus]");
   if (focus) focus.focus();
+}
+
+function mountReportCloud() {
+  const slot = app.querySelector("[data-cloud-slot]");
+  if (!slot) return;
+  mountScl90Cloud(slot, {
+    nickname: state.profile.name,
+    answers: state.answers.slice(),
+    rushed: state.rushed,
+  });
 }
 
 function shell(inner, extra = "") {
@@ -118,7 +130,7 @@ function renderCover() {
       <button class="primary" data-action="start" type="button">开始测评</button>
     </div>
     <ol class="index">${index}</ol>
-    <p class="fine">作答和计分都留在这台设备上，不会上传。结果用来了解最近一周的感受，不是医学诊断。</p>
+    <p class="fine">计分留在这台设备上，报告也可以打印。进入结果页后会准备一条阅读链接，点「分享结果」才会复制。性别和年龄不会上传。结果用来了解最近一周的感受，不是医学诊断。</p>
   `);
 }
 
@@ -136,7 +148,7 @@ function renderProfile() {
   return shell(`
     <p class="kicker"><i class="mark"></i> 开始之前</p>
     <h1>你的称谓</h1>
-    <p class="lead">姓名、性别和年龄只印在这份报告上。三个都填了，才能进入题目。</p>
+    <p class="lead">姓名会印在报告上，并作为分享链接里的称呼，超过 12 个字只取前面 12 个。性别和年龄只留在这台设备上。三个都填了，才能进入题目。</p>
     <div class="field">
       <label for="person">姓名</label>
       <input id="person" name="person" type="text" maxlength="20" autocomplete="off" data-autofocus value="${esc(state.profile.name)}" />
@@ -313,6 +325,7 @@ function renderReport() {
       <p>因子均分 = 该因子题目得分之和 ÷ 题目数。筛查阳性：总分超过 160，或阳性项目超过 43，或九个症状因子里有均分超过 2。因子常模来自 1986 年全国正常成人样本（N=1388）。</p>
       <p>这是筛查，不是诊断，也不能代替面谈。</p>
     </div>
+    <div data-cloud-slot></div>
     <div class="actions" style="margin-top:22px">
       <button class="ghost" type="button" data-action="restart">重新测评</button>
       <button class="ghost" type="button" data-action="print">打印报告</button>
