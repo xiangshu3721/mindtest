@@ -1,5 +1,8 @@
 {
-  "name": "scl90",
+  "name": "ecr",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "test": "node --test ecr/js/score.test.mjs scl90/js/score.test.mjs scl90/js/cloud-client.test.mjs scl90/js/cloud-payload.test.mjs scl90/js/cloud-kit.test.mjs"
+  }
 }

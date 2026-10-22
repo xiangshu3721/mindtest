@@ -3,12 +3,77 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#e7e0d4" />
-    <title>SCL-90 症状自评量表</title>
-    <link rel="stylesheet" href="css/app.css" />
+    <meta name="theme-color" content="#f3ece4" />
+    <title>心理测试</title>
+    <link rel="stylesheet" href="css/home.css" />
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="js/app.js"></script>
+    <!--
+      THESIS: Five equal plates on one desk, opened by choosing one. Refuses a featured hero and a leftover list.
+      OWN-WORLD: Ivory paper, ink brown, Songti titles, mounted still lifes; each plate's mark color appears only on 进入.
+      STORY: The visitor sees five separate self-assessments in a fixed order and opens exactly one.
+      FIRST VIEWPORT: 心理测试 at the upper left, the line 认识自己，成为自己，绽放生命！ beneath it, then three 4:3 still-life plates with title, one sentence, and a 进入 button.
+      FORM: Equal catalog plates inside the existing paper assessment world. The order was specified, so no seed.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+    -->
+    <main class="desk">
+      <header>
+        <h1>心理测试</h1>
+        <p>认识自己，成为自己，绽放生命！</p>
+      </header>
+      <ol class="plates">
+        <li>
+          <a class="plate" href="scl90/index.html" style="--mark:#1f3f38">
+            <img src="img/scl90.jpg" alt="" width="1152" height="864" />
+            <span class="copy">
+              <strong>SCL-90 症状自评量表</strong>
+              <span class="blurb">从十个方面看最近一星期的感受。</span>
+              <span class="meta"><b>90 题 · 16 岁以上</b><em>进入</em></span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a class="plate" href="pdq/index.html" style="--mark:#7a3140">
+            <img src="img/pdq.jpg" alt="" width="1152" height="864" />
+            <span class="copy">
+              <strong>人格障碍筛查 PDQ-4</strong>
+              <span class="blurb">看 12 种人格模式有没有达到划界。这是筛查，不是诊断。</span>
+              <span class="meta"><b>126 题</b><em>进入</em></span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a class="plate" href="ecr/index.html" style="--mark:#6b3a45">
+            <img src="img/ecr.jpg" alt="" width="1152" height="864" />
+            <span class="copy">
+              <strong>成人依恋关系测评</strong>
+              <span class="blurb">看恋爱关系里常常出现的亲近和担心。</span>
+              <span class="meta"><b>36 题</b><em>进入</em></span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a class="plate" href="https://xiangshu3721.github.io/root-journey-web/" style="--mark:#14352c">
+            <img src="img/roots.jpg" alt="" width="1152" height="864" />
+            <span class="copy">
+              <strong>寻根之旅 · 原生家庭考古</strong>
+              <span class="blurb">从原生家庭出发，理解自己如何成为今天的你。</span>
+              <span class="meta"><b>一段旅程</b><em>进入</em></span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a class="plate" href="https://xiangshu3721.github.io/5loves/" style="--mark:#b54a5c">
+            <img src="img/loves.jpg" alt="" width="1152" height="864" />
+            <span class="copy">
+              <strong>爱的 5 种语言</strong>
+              <span class="blurb">每一题两句话，选出更接近「这样我会觉得被爱」的一句。</span>
+              <span class="meta"><b>30 题</b><em>进入</em></span>
+            </span>
+          </a>
+        </li>
+      </ol>
+      <p class="close">作答留在这台设备上。结果用于自我了解，不是诊断。</p>
+    </main>
   </body>
 </html>

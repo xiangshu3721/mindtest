@@ -1,0 +1,277 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-22T13:28:09Z",
+  "title": "Design System: 九份分开做",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Ivory Paper",
+        "canonical": "#f3ece4",
+        "tonalRamp": [
+          "oklch(22% 0.02 70)",
+          "oklch(35% 0.025 70)",
+          "oklch(48% 0.03 70)",
+          "oklch(62% 0.03 70)",
+          "oklch(78% 0.025 70)",
+          "oklch(88% 0.02 70)",
+          "oklch(94% 0.015 70)",
+          "oklch(97% 0.01 70)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink Brown",
+        "canonical": "#241c18",
+        "tonalRamp": [
+          "oklch(15% 0.02 55)",
+          "oklch(22% 0.025 55)",
+          "oklch(32% 0.03 55)",
+          "oklch(45% 0.03 55)",
+          "oklch(58% 0.025 55)",
+          "oklch(72% 0.02 55)",
+          "oklch(85% 0.015 55)",
+          "oklch(94% 0.01 55)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "#4e433d",
+        "tonalRamp": [
+          "oklch(20% 0.015 55)",
+          "oklch(30% 0.02 55)",
+          "oklch(40% 0.02 55)",
+          "oklch(48% 0.02 55)",
+          "oklch(60% 0.015 55)",
+          "oklch(72% 0.012 55)",
+          "oklch(84% 0.01 55)",
+          "oklch(94% 0.008 55)"
+        ]
+      },
+      "sheet": {
+        "role": "neutral",
+        "displayName": "Sheet",
+        "canonical": "#faf6f1",
+        "tonalRamp": [
+          "oklch(25% 0.015 75)",
+          "oklch(40% 0.02 75)",
+          "oklch(55% 0.02 75)",
+          "oklch(70% 0.018 75)",
+          "oklch(82% 0.015 75)",
+          "oklch(90% 0.012 75)",
+          "oklch(95% 0.01 75)",
+          "oklch(98% 0.008 75)"
+        ]
+      },
+      "still-life-hold": {
+        "role": "neutral",
+        "displayName": "Still-Life Hold",
+        "canonical": "#efe6dc",
+        "tonalRamp": [
+          "oklch(28% 0.02 70)",
+          "oklch(42% 0.025 70)",
+          "oklch(55% 0.025 70)",
+          "oklch(68% 0.022 70)",
+          "oklch(80% 0.02 70)",
+          "oklch(88% 0.015 70)",
+          "oklch(93% 0.012 70)",
+          "oklch(96% 0.01 70)"
+        ]
+      },
+      "selection": {
+        "role": "neutral",
+        "displayName": "Selection Wash",
+        "canonical": "#edd5d4",
+        "tonalRamp": [
+          "oklch(30% 0.05 20)",
+          "oklch(42% 0.055 20)",
+          "oklch(55% 0.05 20)",
+          "oklch(68% 0.045 20)",
+          "oklch(78% 0.04 20)",
+          "oklch(86% 0.035 20)",
+          "oklch(91% 0.03 20)",
+          "oklch(95% 0.02 20)"
+        ]
+      },
+      "mark-default": {
+        "role": "primary",
+        "displayName": "Plate Mark Default",
+        "canonical": "#7a3140",
+        "tonalRamp": [
+          "oklch(22% 0.07 15)",
+          "oklch(32% 0.08 15)",
+          "oklch(40% 0.09 15)",
+          "oklch(48% 0.09 15)",
+          "oklch(58% 0.07 15)",
+          "oklch(70% 0.05 15)",
+          "oklch(82% 0.03 15)",
+          "oklch(93% 0.015 15)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page title 九份分开做 only."
+      },
+      "title": {
+        "displayName": "Plate Title",
+        "purpose": "Assessment names on catalog plates; 24px at ≤640px."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default sans for page text."
+      },
+      "lead": {
+        "displayName": "Lead",
+        "purpose": "Header sentence under the display title; muted, max 36em."
+      },
+      "blurb": {
+        "displayName": "Blurb",
+        "purpose": "One-sentence plate description."
+      },
+      "label": {
+        "displayName": "Meta Label",
+        "purpose": "Question counts and 进入; tabular nums."
+      },
+      "quiet": {
+        "displayName": "Quiet Close",
+        "purpose": "Closing privacy/disclaimer line under the grid."
+      }
+    },
+    "shadows": [
+      {
+        "name": "mounted-rest",
+        "value": "0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 14px 32px rgba(72, 42, 32, 0.06)",
+        "purpose": "Default plate resting on the desk."
+      },
+      {
+        "name": "mounted-hover",
+        "value": "0 1px 0 rgba(255, 255, 255, 0.8) inset, 2px 22px 44px rgba(72, 42, 32, 0.12)",
+        "purpose": "Hover lift on hover-capable pointers; pair with translateY(-4px)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "plate-ease",
+        "value": "0.45s cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Plate transform and shadow transition on hover."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "transition: none; transform: none on hover",
+        "purpose": "prefers-reduced-motion: disable plate lift."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "two-column",
+        "value": "900px"
+      },
+      {
+        "name": "one-column",
+        "value": "640px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Catalog Plate",
+      "kind": "card",
+      "refersTo": "plate",
+      "description": "Equal folio plate: 4:3 still life, Songti title, one blurb, meta + 进入.",
+      "html": "<a class=\"ds-plate\" href=\"#\" style=\"--mark:#1f3f38\"><span class=\"ds-plate-image\" aria-hidden=\"true\"></span><span class=\"ds-plate-copy\"><strong class=\"ds-plate-title\">SCL-90 症状自评量表</strong><span class=\"ds-plate-blurb\">从十个方面看最近一星期的感受。</span><span class=\"ds-plate-meta\"><b>90 题 · 16 岁以上</b><em>进入</em></span></span></a>",
+      "css": ".ds-plate { display: flex; flex-direction: column; color: #241c18; text-decoration: none; background: #faf6f1; border: 1px solid rgba(36, 28, 24, 0.08); border-radius: 4px 22px 4px 22px; overflow: hidden; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 14px 32px rgba(72, 42, 32, 0.06); transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1); } .ds-plate:hover { transform: translateY(-4px); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 2px 22px 44px rgba(72, 42, 32, 0.12); } .ds-plate:focus-visible { outline: 2px solid var(--mark, #7a3140); outline-offset: 3px; } .ds-plate-image { display: block; width: 100%; aspect-ratio: 4 / 3; background: #efe6dc; } .ds-plate-copy { display: flex; flex: 1; flex-direction: column; gap: 8px; padding: 16px 18px; } .ds-plate-title { font-family: \"Songti SC\", \"STSong\", \"Noto Serif SC\", \"Iowan Old Style\", Palatino, serif; font-size: 22px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.25; } .ds-plate-blurb { color: #4e433d; font-family: \"PingFang SC\", \"Hiragino Sans GB\", \"Avenir Next\", \"Segoe UI\", sans-serif; font-size: 15px; line-height: 1.55; } .ds-plate-meta { display: flex; justify-content: space-between; align-items: baseline; margin-top: auto; padding-top: 12px; font-family: \"PingFang SC\", \"Hiragino Sans GB\", \"Avenir Next\", \"Segoe UI\", sans-serif; font-size: 13px; font-variant-numeric: tabular-nums; } .ds-plate-meta b { color: #4e433d; font-weight: 560; font-style: normal; } .ds-plate-meta em { color: var(--mark); font-style: normal; font-weight: 560; }"
+    },
+    {
+      "name": "Enter Affordance",
+      "kind": "button",
+      "refersTo": "plate-enter",
+      "description": "Text-only 进入 in the plate mark; not a filled button.",
+      "html": "<span class=\"ds-enter\" style=\"--mark:#7a3140\">进入</span>",
+      "css": ".ds-enter { color: var(--mark, #7a3140); font-family: \"PingFang SC\", \"Hiragino Sans GB\", \"Avenir Next\", \"Segoe UI\", sans-serif; font-size: 13px; font-style: normal; font-weight: 560; font-variant-numeric: tabular-nums; } .ds-enter:focus-visible { outline: 2px solid var(--mark, #7a3140); outline-offset: 3px; }"
+    },
+    {
+      "name": "Plate Meta",
+      "kind": "custom",
+      "refersTo": "plate-meta",
+      "description": "Muted question-count label opposite 进入 on the meta row.",
+      "html": "<span class=\"ds-meta\"><b>36 题</b></span>",
+      "css": ".ds-meta { font-family: \"PingFang SC\", \"Hiragino Sans GB\", \"Avenir Next\", \"Segoe UI\", sans-serif; font-size: 13px; font-variant-numeric: tabular-nums; } .ds-meta b { color: #4e433d; font-weight: 560; }"
+    },
+    {
+      "name": "Desk Header",
+      "kind": "custom",
+      "refersTo": "desk-lead",
+      "description": "Songti page title plus one muted lead sentence.",
+      "html": "<header class=\"ds-desk-header\"><h1 class=\"ds-desk-title\">九份分开做</h1><p class=\"ds-desk-lead\">点开一张，只做这一份。做完即止，分数不和另一份相加。</p></header>",
+      "css": ".ds-desk-header { color: #241c18; } .ds-desk-title { margin: 0; font-family: \"Songti SC\", \"STSong\", \"Noto Serif SC\", \"Iowan Old Style\", Palatino, serif; font-size: clamp(40px, 5vw, 64px); font-weight: 500; letter-spacing: -0.03em; line-height: 1.05; text-wrap: balance; } .ds-desk-lead { max-width: 36em; margin: 16px 0 0; color: #4e433d; font-family: \"PingFang SC\", \"Hiragino Sans GB\", \"Avenir Next\", \"Segoe UI\", sans-serif; font-size: 17px; line-height: 1.55; }"
+    },
+    {
+      "name": "Desk Close",
+      "kind": "custom",
+      "refersTo": "desk-close",
+      "description": "Muted closing note under the plate grid.",
+      "html": "<p class=\"ds-desk-close\">作答留在这台设备上。结果用于自我了解，不是诊断。</p>",
+      "css": ".ds-desk-close { margin: 36px 0 0; color: #4e433d; font-family: \"PingFang SC\", \"Hiragino Sans GB\", \"Avenir Next\", \"Segoe UI\", sans-serif; font-size: 14px; line-height: 1.55; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Nine Plates on One Desk",
+    "overview": "The catalog is one desk of ivory paper with nine equal mounted plates. Nothing is featured above the rest; the visitor reads a short title and instruction, then chooses exactly one plate. Titles sit in Songti; body copy stays in a system sans. Each plate carries a 4:3 still-life illustration and a single sentence. The only colored accent on a plate is the word 进入, tinted with that plate’s mark.\n\nThis system documents the catalog page (`index.html` / `css/home.css`) and the shared paper tokens it actually declares. Individual assessment apps keep their own stylesheets; their question-runner UI is out of scope here.",
+    "keyCharacteristics": [
+      "Equal plates in a fixed order; no hero plate and no leftover list",
+      "Ivory paper desk, warmer sheet surfaces, ink-brown type",
+      "Songti for page and plate titles; sans for body, blurbs, and meta",
+      "Still-life images locked to 4:3 and mounted on the plate",
+      "Per-plate `--mark` color appears only on 进入 (and focus outline when set)"
+    ],
+    "rules": [
+      {
+        "name": "The Enter-Only Mark Rule",
+        "body": "A plate’s mark color may tint 进入 and the focus outline. It must not wash the title, blurb, meta counts, border, or illustration frame.",
+        "section": "colors"
+      },
+      {
+        "name": "The Equal Plate Rule",
+        "body": "No plate receives a larger accent, badge, or featured treatment. Mark color does not create hierarchy between plates.",
+        "section": "colors"
+      },
+      {
+        "name": "The Songti Title Rule",
+        "body": "Songti is reserved for the page title and plate titles. Blurbs, meta, lead, and close stay sans.",
+        "section": "typography"
+      },
+      {
+        "name": "The Three-Then-Collapse Rule",
+        "body": "Desktop shows three equal columns so the first viewport can hold three full plates under the title. Narrower viewports collapse to two, then one — never a featured row plus a remnant list.",
+        "section": "layout"
+      },
+      {
+        "name": "The Mounted Plate Rule",
+        "body": "Shadows describe paper resting on the desk. Do not add hard offset drop-shadows, glow, or layered card stacks.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Folio Corner Rule",
+        "body": "Keep the 4 / 22 / 4 / 22 radius on catalog plates. Do not round all corners equally or pill the plate.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do keep all nine plates equal in size, structure, and chrome.",
+      "Do put each plate’s mark color only on 进入 (and focus when that plate is targeted).",
+      "Do lock still lifes to 4:3 and mount them at the top of the plate.",
+      "Do use Songti for titles and sans for body, blurb, meta, and close.",
+      "Do collapse the grid 3 → 2 → 1 without introducing a featured hero."
+    ],
+    "donts": [
+      "Don't feature one assessment above the others or demote the rest into a leftover list.",
+      "Don't spread mark color across titles, blurbs, borders, or image frames.",
+      "Don't replace folio corners with uniform large radii or pill shapes.",
+      "Don't fold scl90 / pdq / ecr question-runner chrome into this catalog system.",
+      "Don't add kickers, eyebrows, floating badges, or stat strips to the first viewport."
+    ]
+  }
+}

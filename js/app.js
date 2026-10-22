@@ -1,17 +1,16 @@
-import { AGES, FACTORS, OPTIONS, QUESTIONS, SCALE } from "./data.js";
-import { formatScore, rushCheck, scoreScl90 } from "./score.js";
+import { OPTIONS, QUESTIONS, REVERSE_ITEMS, SCALE, TYPES } from "./data.js";
+import { formatScore, rushCheck, scoreEcr, scoredValue } from "./score.js";
 
 const app = document.querySelector("#app");
-const STORAGE = "scl90-session";
+const STORAGE = "ecr-session";
+const REVERSE = new Set(REVERSE_ITEMS);
 
 const state = {
   step: "cover",
-  profile: { name: "", gender: "", age: "" },
   index: 0,
   answers: Array(QUESTIONS.length).fill(null),
   times: Array(QUESTIONS.length).fill(null),
   result: null,
-  rushed: false,
   error: "",
 };
 
@@ -27,13 +26,11 @@ function load() {
     state.times = Array.isArray(saved.times) && saved.times.length === QUESTIONS.length
       ? saved.times
       : state.times;
-    state.profile = { ...state.profile, ...saved.profile };
     state.index = Number.isInteger(saved.index) ? saved.index : 0;
     state.step = saved.step || "cover";
-    state.rushed = Boolean(saved.rushed);
-    if ((state.step === "report" || state.step === "rush") && complete()) {
-      state.result = scoreScl90(state.answers);
-    } else if (state.step === "report" || state.step === "rush") {
+    if (state.step === "report" && complete()) {
+      state.result = scoreEcr(state.answers);
+    } else if (state.step === "report") {
       state.step = "test";
     }
   } catch {
@@ -44,11 +41,9 @@ function load() {
 function save() {
   sessionStorage.setItem(STORAGE, JSON.stringify({
     step: state.step,
-    profile: state.profile,
     index: state.index,
     answers: state.answers,
     times: state.times,
-    rushed: state.rushed,
   }));
 }
 
@@ -74,19 +69,9 @@ function optionLabel(score) {
   return OPTIONS.find((option) => option.value === score)?.label ?? "";
 }
 
-function today() {
-  const date = new Date();
-  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
-}
-
-function barPercent(score) {
-  return Math.max(0, Math.min(100, ((score - 1) / 4) * 100));
-}
-
 function render() {
   const view = {
     cover: renderCover,
-    profile: renderProfile,
     test: renderTest,
     rush: renderRush,
     report: renderReport,
@@ -96,64 +81,37 @@ function render() {
   if (focus) focus.focus();
 }
 
-function shell(inner, extra = "") {
-  return `<main class="frame"><article class="sheet ${extra}">${inner}</article></main>`;
+function shell(inner) {
+  return `<main class="frame"><article class="sheet">${inner}</article></main>`;
 }
 
 function renderCover() {
-  const index = FACTORS.map((factor, i) => (
-    `<li><b>${pad(i + 1)}</b><span>${esc(factor.name)}</span></li>`
-  )).join("");
+  const types = TYPES.map((type, index) => `
+    <li>
+      <b>${pad(index + 1)}</b>
+      <span>${esc(type.name)}</span>
+      <em>${esc(type.short)}</em>
+    </li>
+  `).join("");
   return shell(`
-    <p class="kicker"><i class="mark"></i> SCL-90</p>
-    <h1>症状自评量表</h1>
+    <p class="kicker">ECR</p>
+    <h1>成人依恋</h1>
+    <p class="ename">${esc(SCALE.name)}</p>
     <p class="lead">${esc(SCALE.intro)}</p>
+    <p class="lead quiet">${esc(SCALE.instruction)}</p>
     <div class="meta">
-      <span>90 题</span>
-      <span>最近一星期</span>
-      <span>${esc(SCALE.audience)}</span>
-      <span>约 15 分钟</span>
+      <span>36 题</span>
+      <span>七点作答</span>
+      <span>所有恋爱经历</span>
+      <span>约 8 分钟</span>
     </div>
     <div class="actions">
       <button class="primary" data-action="start" type="button">开始测评</button>
     </div>
-    <ol class="index">${index}</ol>
-    <p class="fine">作答和计分都留在这台设备上，不会上传。结果用来了解最近一周的感受，不是医学诊断。</p>
-  `);
-}
-
-function renderProfile() {
-  const gender = ["男", "女"].map((value) => `
-    <button class="choice" type="button" data-action="gender" data-value="${value}" aria-pressed="${state.profile.gender === value}">
-      <span>${value}</span>
-    </button>
-  `).join("");
-  const ages = AGES.map((value) => `
-    <button class="choice" type="button" data-action="age" data-value="${esc(value)}" aria-pressed="${state.profile.age === value}">
-      <span>${esc(value)}</span>
-    </button>
-  `).join("");
-  return shell(`
-    <p class="kicker"><i class="mark"></i> 开始之前</p>
-    <h1>你的称谓</h1>
-    <p class="lead">姓名、性别和年龄只印在这份报告上。三个都填了，才能进入题目。</p>
-    <div class="field">
-      <label for="person">姓名</label>
-      <input id="person" name="person" type="text" maxlength="20" autocomplete="off" data-autofocus value="${esc(state.profile.name)}" />
-    </div>
-    <div class="field">
-      <div class="section-label">性别</div>
-      <div class="choices split">${gender}</div>
-    </div>
-    <div class="field">
-      <div class="section-label">年龄</div>
-      <div class="choices split">${ages}</div>
-    </div>
-    <p class="hint">${esc(state.error)}</p>
-    <div class="actions">
-      <button class="primary" type="button" data-action="enter">下一页</button>
-      <button class="ghost" type="button" data-action="cover">返回</button>
-    </div>
+    <h2>两种感觉，四种相处</h2>
+    <p class="sub">回避看你对亲近和依赖紧不紧。焦虑看你会不会怕被丢下。两个分数合在一起，归到下面四种里最高的那一型。</p>
+    <ol class="types">${types}</ol>
+    <p class="fine">作答和计分都留在这台设备上，不会上传。结果用来看你在亲密关系里的习惯，不是诊断。</p>
   `);
 }
 
@@ -163,25 +121,24 @@ function renderTest() {
   const width = ((index + (answer ? 1 : 0)) / QUESTIONS.length) * 100;
   const options = OPTIONS.map((option) => `
     <button class="option" type="button" data-action="answer" data-value="${option.value}" aria-checked="${answer === option.value}">
+      <b>${option.value}</b>
       <span>${esc(option.label)}</span>
-      <small>${option.value}</small>
     </button>
   `).join("");
   const last = index === QUESTIONS.length - 1;
-  const nextLabel = last ? "生成报告" : "下一题";
   return shell(`
     <div class="progress" aria-hidden="true"><span style="width:${width}%"></span></div>
     <div class="q-top">
       <span>${pad(index + 1)} / ${QUESTIONS.length}</span>
-      <span>${esc(state.profile.name)}</span>
+      <span>亲密关系</span>
     </div>
     <h2 class="question" data-autofocus tabindex="-1">${esc(QUESTIONS[index])}</h2>
-    ${index === 0 ? `<p class="prompt">${esc(SCALE.instruction)}</p>` : `<p class="prompt">按最近一星期以内的实际感觉选择。</p>`}
+    <p class="prompt">${index === 0 ? esc(SCALE.instruction) : "按你在恋爱经历里常常有的感觉来选。"}</p>
     <div class="options" role="radiogroup" aria-label="第 ${index + 1} 题">${options}</div>
     <p class="hint">${esc(state.error)}</p>
     <div class="nav">
       <button class="ghost" type="button" data-action="prev" ${index === 0 ? "disabled" : ""}>上一题</button>
-      <button class="primary" type="button" data-action="next">${nextLabel}</button>
+      <button class="primary" type="button" data-action="next">${last ? "生成报告" : "下一题"}</button>
     </div>
   `);
 }
@@ -190,130 +147,116 @@ function renderRush() {
   const check = rushCheck(state.times);
   const percent = Math.round(check.ratio * 100);
   return shell(`
-    <p class="kicker"><i class="mark"></i> 作答速度</p>
+    <p class="kicker">作答速度</p>
     <h1>有些题答得太快</h1>
-    <p class="lead">相邻题目里，有 ${percent}% 的间隔不到 1.5 秒。超过一半时，这份量表会认为作答可能没有贴近最近一周的实际感觉，结果会偏。</p>
+    <p class="lead">相邻题目里，有 ${percent}% 的间隔不到 1.5 秒。超过一半时，这份量表不生成结果。</p>
+    <p class="lead quiet">稍安勿躁，请再做一遍。</p>
     <div class="actions">
-      <button class="primary" type="button" data-action="back-to-test">返回检查</button>
-      <button class="ghost" type="button" data-action="force-report">仍然生成</button>
+      <button class="primary" type="button" data-action="restart">重新作答</button>
     </div>
   `);
 }
 
+function axisNote(result) {
+  const avoid = `${result.avoidance.name} ${formatScore(result.avoidance.mean)}，${result.avoidance.levelLabel}`;
+  const anxiety = `${result.anxiety.name} ${formatScore(result.anxiety.mean)}，${result.anxiety.levelLabel}`;
+  return `${avoid}。${anxiety}。中点是 4 分。`;
+}
+
 function renderReport() {
   const result = state.result;
-  const profile = state.profile;
-  const verdictClass = result.crisis?.level === "urgent"
-    ? "urgent"
-    : result.positive ? "positive" : "";
-  const metrics = [
-    ["总分", String(result.total)],
-    ["总症状指数", formatScore(result.gsi)],
-    ["阳性项目", String(result.positiveCount)],
-    ["阴性项目", String(result.negativeCount)],
-    ["阳性症状均分", result.positiveMean == null ? "—" : formatScore(result.positiveMean)],
-  ];
-  const metricHtml = metrics.map(([label, value]) => `
+  const x = ((result.avoidance.exactMean - 1) / 6) * 100;
+  const y = ((result.anxiety.exactMean - 1) / 6) * 100;
+  const metrics = result.dimensions.map((dimension) => `
     <div class="metric">
-      <b>${esc(value)}</b>
-      <span>${esc(label)}</span>
+      <b>${formatScore(dimension.mean)}</b>
+      <span>${esc(dimension.name)}</span>
+      <em>${esc(dimension.levelLabel)} · 总分 ${dimension.sum}</em>
     </div>
   `).join("");
-  const aboveNames = [
-    result.totalAboveNorm ? "总分" : "",
-    result.gsiAboveNorm ? "总症状指数" : "",
-    result.positiveCountAboveNorm ? "阳性项目数" : "",
-    result.positiveMeanAboveNorm ? "阳性症状均分" : "",
-  ].filter(Boolean);
-  const aboveLine = aboveNames.length
-    ? `高于常模一个标准差的是${aboveNames.join("、")}。`
-    : "总分、总症状指数和阳性项目数都没有超过常模一个标准差。";
-  const rules = result.rules.map((rule) => `
-    <li>
-      <span class="pill ${rule.hit ? "hit" : ""}">${rule.hit ? "超过" : "未超过"}</span>
-      <span><strong>${esc(rule.label)}</strong><br />${esc(rule.detail)}</span>
+  const factors = result.dimensions.map((dimension) => `
+    <section class="factor">
+      <header>
+        <h3>${esc(dimension.name)}</h3>
+        <span>${formatScore(dimension.mean)}</span>
+      </header>
+      <em class="about">${esc(dimension.about)}</em>
+      <div class="bar" aria-hidden="true">
+        <b style="width:${((dimension.exactMean - 1) / 6) * 100}%"></b>
+        <i style="left:50%"></i>
+      </div>
+      <p>${esc(dimension.narrative)}</p>
+    </section>
+  `).join("");
+  const typeRows = result.types.map((type) => `
+    <li class="${type.win ? "win" : ""}">
+      <span>${esc(type.name)}</span>
+      <b>${formatScore(type.m)}</b>
     </li>
   `).join("");
-  const factors = result.ranked.map((factor) => {
-    const norm = factor.norm
-      ? `常模 ${factor.norm.mean.toFixed(2)} ± ${factor.norm.sd.toFixed(2)}，超过 ${(factor.norm.mean + factor.norm.sd).toFixed(2)} 记为高于常模`
-      : "这一组没有 1986 年九因子常模，程度仍按均分划分";
-    const normTick = factor.norm
-      ? `<i class="norm" style="left:${barPercent(factor.norm.mean)}%"></i>`
-      : "";
+  const notes = [
+    result.tied ? "两个类型的判别分相同，并列写在上面。" : "",
+    result.closeCall && !result.tied ? `第一型只比第二型高 ${formatScore(result.margin)} 分。可以当作倾向，不必当成唯一标签。` : "",
+    result.nearMidpoint ? "两个均分都贴着中点。类型仍然按判别分最高的一项给出，风格并不鲜明。" : "",
+    result.differsFromQuadrant
+      ? `若只按 4 分切成四格，会落到${result.quadrantName}。这份量表用判别式，最高的是${result.type.name}。`
+      : "",
+  ].filter(Boolean);
+  const noteHtml = notes.length
+    ? `<div class="notes">${notes.map((note) => `<p>${esc(note)}</p>`).join("")}</div>`
+    : "";
+  const ledger = QUESTIONS.map((text, index) => {
+    const raw = state.answers[index];
+    const scored = scoredValue(index + 1, raw);
+    const reversed = REVERSE.has(index + 1);
     return `
-      <section class="factor">
-        <header>
-          <h3>${esc(factor.name)}</h3>
-          <span class="level ${esc(factor.level)}">${esc(factor.levelLabel)} · ${formatScore(factor.mean)}</span>
-        </header>
-        <em class="about">${esc(factor.about)}</em>
-        <div class="bar" aria-hidden="true">
-          <b class="${esc(factor.level)}" style="width:${barPercent(factor.mean)}%"></b>
-          <i class="cut" style="left:${barPercent(2)}%"></i>
-          ${normTick}
-        </div>
-        <div class="scale-note">因子总分 ${factor.raw} / ${factor.count} 题 · ${esc(norm)}${factor.aboveNorm ? " · 高于常模" : ""}</div>
-        <p>${esc(factor.narrative)}</p>
-      </section>
+      <li>
+        <b>${pad(index + 1)}</b>
+        <span>${esc(text)}</span>
+        <span>${esc(optionLabel(raw))}${reversed ? ` · 计 ${scored}` : ""}</span>
+      </li>
     `;
   }).join("");
-  const notable = result.notable.length
-    ? `<ul class="symptoms">${result.notable.map((item) => `
-        <li><b>${pad(item.n)}</b><span>${esc(item.text)}</span><span>${esc(optionLabel(item.score))}</span></li>
-      `).join("")}</ul>`
-    : `<p class="sub">没有题目达到偏重或严重。</p>`;
-  const crisis = result.crisis
-    ? `<div class="verdict ${result.crisis.level === "note" ? "" : "urgent"}"><strong>${result.crisis.level === "note" ? "关于死亡的想法" : "请先看这里"}</strong><p>${esc(result.crisis.text)}</p></div>`
-    : "";
-  const guidance = result.guidance.map((line) => `<li>${esc(line)}</li>`).join("");
-  const ledger = QUESTIONS.map((text, index) => `
-    <li><b>${pad(index + 1)}</b><span>${esc(text)}</span><span>${esc(optionLabel(state.answers[index]))}</span></li>
-  `).join("");
-  const youth = profile.age === "20岁以下"
-    ? `<p class="sub">年龄选的是 20 岁以下。常模来自成人样本，16–19 岁只作参考，不宜直接套用成人界值做判断。</p>`
-    : "";
-  const rushNote = state.rushed
-    ? `<div class="verdict positive"><strong>作答偏快</strong><p>超过一半的题目间隔不到 1.5 秒。下面的分数仍然按作答计算，但可能没有反映最近一周的实际感觉。</p></div>`
-    : "";
 
   return shell(`
-    <p class="kicker"><i class="mark"></i> 测评报告</p>
-    <h1>症状自评量表</h1>
-    <div class="who">
-      <div><span>姓名</span><b>${esc(profile.name)}</b></div>
-      <div><span>性别</span><b>${esc(profile.gender)}</b></div>
-      <div><span>年龄</span><b>${esc(profile.age)}</b></div>
-      <div><span>日期</span><b>${esc(today())}</b></div>
+    <p class="kicker">测评结果</p>
+    <h1>${esc(result.type.name)}</h1>
+    <p class="ename">${esc(result.type.short)}</p>
+    <p class="lead">${esc(axisNote(result))}</p>
+    <div class="plane" style="--x:${x}%;--y:${y}%" role="img" aria-label="回避 ${formatScore(result.avoidance.mean)}，焦虑 ${formatScore(result.anxiety.mean)}">
+      <div class="plot"><b class="dot"></b></div>
+      <span class="axis-x">回避</span>
+      <span class="axis-y">焦虑</span>
     </div>
-    ${crisis}
-    ${rushNote}
-    <div class="verdict ${verdictClass}">
-      <strong>${esc(result.verdictTitle)}</strong>
-      <p>${esc(result.verdictText)}</p>
-    </div>
-    ${youth}
-    <div class="metrics">${metricHtml}</div>
-    <p class="sub">${esc(result.gsiText)}${esc(aboveLine)}全国常模里，总分约 ${result.norms.total.mean} ± ${result.norms.total.sd}，阳性项目数约 ${result.norms.positiveCount.mean} ± ${result.norms.positiveCount.sd}。</p>
-    <ul class="rules">${rules}</ul>
-    <h2>十个方面</h2>
-    <p class="sub">横条是因子均分，左端 1 分，右端 5 分。黑线是 2 分筛查界，灰线是常模均分。2 分及以下为无明显症状，其后到 3 分为轻度，到 4 分为中度，再高为重度。</p>
+    <p class="fine plane-note">十字是量表中点，不是分型的切线。点越靠右回避越高，越靠上焦虑越高。</p>
+    <div class="metrics">${metrics}</div>
     ${factors}
-    <h2>怎么看下一步</h2>
-    <ul class="guidance">${guidance}</ul>
-    <h2>偏重和严重的条目</h2>
-    ${notable}
+    <h2>四个判别分</h2>
+    <p class="sub">类型是分数最高的一项。回避均分记为 A，焦虑均分记为 B。</p>
+    <ol class="scores">${typeRows}</ol>
+    ${noteHtml}
+    <h2>这一型在说什么</h2>
+    <p class="story">${esc(result.type.text)}</p>
+    <h2>怎么看</h2>
+    <ul class="guidance">
+      <li>先看两个均分离 4 有多远。4 是量表从 1 到 7 的中点，不是诊断界值。</li>
+      <li>再看四个判别分。最高的一项才是类型，不按“超过 4 分就划进高的一边”来切。</li>
+      <li>这是你在恋爱经历里常常有的感觉，不是对某一次吵架的结论，也不能代替两个人具体怎么相处。</li>
+    </ul>
     <details class="ledger">
-      <summary>查看 90 题的作答</summary>
+      <summary>查看 36 题的作答</summary>
       <ol>${ledger}</ol>
     </details>
     <div class="formulas">
-      <p>总分 = 90 题相加。总症状指数 = 总分 ÷ 90。</p>
-      <p>阳性项目 = 选了很轻及以上的题。阴性项目 = 选了「没有」的题。阳性症状均分 = 阳性题得分之和 ÷ 阳性题数。</p>
-      <p>因子均分 = 该因子题目得分之和 ÷ 题目数。筛查阳性：总分超过 160，或阳性项目超过 43，或九个症状因子里有均分超过 2。因子常模来自 1986 年全国正常成人样本（N=1388）。</p>
-      <p>这是筛查，不是诊断，也不能代替面谈。</p>
+      <p>反向题是第 ${REVERSE_ITEMS.join("、")} 题，计分用 8 减原始分。其余题用原始分。</p>
+      <p>回避均分 A = 奇数题之和 ÷ 18。焦虑均分 B = 偶数题之和 ÷ 18。</p>
+      <p>安全型 = A×3.2893296 + B×5.4725318 − 11.5307833</p>
+      <p>恐惧型 = A×7.2371075 + B×8.1776448 − 32.3553266</p>
+      <p>专注型 = A×3.9246754 + B×9.7102446 − 28.4573220</p>
+      <p>冷漠型 = A×7.3654621 + B×4.9392039 − 22.2281088</p>
+      <p>四个数里取最高的一项。这是筛查式的自评，不是诊断。</p>
     </div>
-    <div class="actions" style="margin-top:22px">
+    <div class="actions">
       <button class="ghost" type="button" data-action="restart">重新测评</button>
       <button class="ghost" type="button" data-action="print">打印报告</button>
     </div>
@@ -328,8 +271,16 @@ function go(step) {
   window.scrollTo(0, 0);
 }
 
-function profileReady() {
-  return state.profile.name.trim() && state.profile.gender && state.profile.age;
+function reset() {
+  sessionStorage.removeItem(STORAGE);
+  state.step = "cover";
+  state.index = 0;
+  state.answers = Array(QUESTIONS.length).fill(null);
+  state.times = Array(QUESTIONS.length).fill(null);
+  state.result = null;
+  state.error = "";
+  render();
+  window.scrollTo(0, 0);
 }
 
 function choose(value) {
@@ -347,7 +298,7 @@ function choose(value) {
       state.index += 1;
       save();
       render();
-    }, 180);
+    }, 150);
   }
 }
 
@@ -361,12 +312,11 @@ function finish() {
     render();
     return;
   }
-  state.result = scoreScl90(state.answers);
-  const check = rushCheck(state.times);
-  if (check.tooFast && !state.rushed) {
+  if (rushCheck(state.times).tooFast) {
     go("rush");
     return;
   }
+  state.result = scoreEcr(state.answers);
   go("report");
 }
 
@@ -374,27 +324,9 @@ app.addEventListener("click", (event) => {
   const button = event.target.closest("[data-action]");
   if (!button || button.disabled) return;
   const action = button.dataset.action;
-  if (action === "start") go("profile");
-  if (action === "cover") go("cover");
-  if (action === "gender") {
-    state.profile.gender = button.dataset.value;
-    state.error = "";
-    save();
-    render();
-  }
-  if (action === "age") {
-    state.profile.age = button.dataset.value;
-    state.error = "";
-    save();
-    render();
-  }
-  if (action === "enter") {
-    state.profile.name = state.profile.name.trim();
-    if (!profileReady()) {
-      state.error = "请填写姓名，并选择性别和年龄。";
-      render();
-      return;
-    }
+  if (action === "start") {
+    state.index = state.answers.findIndex((value) => value == null);
+    if (state.index < 0) state.index = 0;
     go("test");
   }
   if (action === "answer") choose(Number(button.dataset.value));
@@ -421,43 +353,15 @@ app.addEventListener("click", (event) => {
     }
     finish();
   }
-  if (action === "back-to-test") {
-    state.index = QUESTIONS.length - 1;
-    go("test");
-  }
-  if (action === "force-report") {
-    state.rushed = true;
-    state.result = scoreScl90(state.answers);
-    go("report");
-  }
-  if (action === "restart") {
-    sessionStorage.removeItem(STORAGE);
-    state.step = "cover";
-    state.profile = { name: "", gender: "", age: "" };
-    state.index = 0;
-    state.answers = Array(QUESTIONS.length).fill(null);
-    state.times = Array(QUESTIONS.length).fill(null);
-    state.result = null;
-    state.rushed = false;
-    state.error = "";
-    render();
-    window.scrollTo(0, 0);
-  }
+  if (action === "restart") reset();
   if (action === "print") window.print();
-});
-
-app.addEventListener("input", (event) => {
-  if (event.target.name === "person") {
-    state.profile.name = event.target.value;
-    save();
-  }
 });
 
 document.addEventListener("keydown", (event) => {
   if (state.step !== "test") return;
   if (event.target.matches("input, textarea")) return;
   const number = Number(event.key);
-  if (number >= 1 && number <= 5) {
+  if (number >= 1 && number <= 7) {
     event.preventDefault();
     choose(number);
   }
@@ -466,30 +370,28 @@ document.addEventListener("keydown", (event) => {
 load();
 render();
 
-if (new URLSearchParams(location.search).has("debug")) {
-  window.__scl = {
+const debugParams = new URLSearchParams(location.search);
+if (debugParams.has("debug")) {
+  window.__ecr = {
     fill(kind) {
-      const answers = Array(QUESTIONS.length).fill(1);
-      if (kind === "high") answers.fill(4);
-      if (kind === "mixed") {
-        const set = (id, score) => {
-          FACTORS.find((factor) => factor.id === id).items.forEach((n) => {
-            answers[n - 1] = score;
-          });
-        };
-        set("som", 2);
-        set("oc", 3);
-        set("dep", 3);
-        set("anx", 4);
-        answers[14] = 2;
-      }
-      if (kind === "crisis") answers[14] = 5;
-      state.profile = { name: "林深", gender: "女", age: "25-29岁" };
+      const answers = Array(QUESTIONS.length).fill(4);
+      const setDimension = (odd, even) => {
+        QUESTIONS.forEach((_, index) => {
+          const n = index + 1;
+          const want = n % 2 === 1 ? odd : even;
+          answers[index] = REVERSE.has(n) ? 8 - want : want;
+        });
+      };
+      if (kind === "secure") setDimension(2, 2);
+      if (kind === "fear") setDimension(6, 6);
+      if (kind === "preoccupied") setDimension(2, 6);
+      if (kind === "dismissing") setDimension(6, 2);
+      if (kind === "mid") answers.fill(4);
       state.answers = answers;
       state.times = answers.map((_, index) => Date.now() + index * 2000);
-      state.rushed = false;
-      state.result = scoreScl90(answers);
+      state.result = scoreEcr(answers);
       go("report");
     },
   };
+  if (debugParams.get("fill")) window.__ecr.fill(debugParams.get("fill"));
 }
