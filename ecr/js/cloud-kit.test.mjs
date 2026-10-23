@@ -111,7 +111,18 @@ describe("ECR 结果页分享", { concurrency: false }, () => {
     assert.equal(calls.length, 1);
     assert.match(calls[0].url, /\/assessment-report-dev\/v1\/results$/);
     assert.equal(calls[0].body.result.assessmentId, "ecr");
-    assert.equal(calls[0].body.result.assessmentName, "成人依恋关系测评");
+    assert.equal(calls[0].body.result.assessmentName, "亲密关系经历量表 ECR");
+    assert.equal(calls[0].body.result.assessmentVersion, "ecr-h5-v1");
+    assert.equal(calls[0].body.result.extensionData.consent.version, "consent-assessment-ecr-1");
+    assert.equal(calls[0].body.result.extensionData.compat.level, "partial");
+    assert.equal(
+      calls[0].body.result.extensionData.compat.gaps.includes("阅读页若尚未重绘 ECR，类型说明在 interpretation、sections 与 textFallback。"),
+      true,
+    );
+    assert.equal(
+      JSON.stringify(calls[0].body.result).includes("这是你在恋爱经历里常常有的感觉，不是对某一次吵架的结论，也不是诊断。"),
+      true,
+    );
     assert.equal(calls[0].body.result.nickname, "林深");
     assert.equal(calls[0].body.result.source.path, "ecr/index.html");
     assert.equal(calls[0].body.result.source.repo, "mindtest");
