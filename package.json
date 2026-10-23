@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test ecr/js/score.test.mjs scl90/js/score.test.mjs scl90/js/cloud-client.test.mjs scl90/js/cloud-payload.test.mjs scl90/js/cloud-kit.test.mjs pdq/js/score.test.mjs pdq/js/cloud-client.test.mjs pdq/js/cloud-payload.test.mjs pdq/js/cloud-kit.test.mjs"
+    "test": "node --test ecr/js/score.test.mjs ecr/js/cloud-client.test.mjs ecr/js/cloud-payload.test.mjs ecr/js/cloud-kit.test.mjs scl90/js/score.test.mjs scl90/js/cloud-client.test.mjs scl90/js/cloud-payload.test.mjs scl90/js/cloud-kit.test.mjs pdq/js/score.test.mjs pdq/js/cloud-client.test.mjs pdq/js/cloud-payload.test.mjs pdq/js/cloud-kit.test.mjs"
   }
 }

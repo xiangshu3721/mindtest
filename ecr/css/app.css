@@ -100,6 +100,34 @@ h2 {
   font-size: 13px;
 }
 
+.nick { margin-top: 26px; }
+
+.nick label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+
+.nick input {
+  width: 100%;
+  min-height: 48px;
+  border: none;
+  border-bottom: 1px solid rgba(36, 28, 24, 0.28);
+  border-radius: 0;
+  background: transparent;
+  padding: 8px 0 10px;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 20px;
+  outline: none;
+}
+
+.nick input:focus { border-bottom-color: var(--wine); }
+
+.nick .sub { margin: 8px 0 0; }
+
 .actions, .nav {
   display: flex;
   flex-wrap: wrap;
@@ -239,6 +267,7 @@ h2 {
 .option[aria-checked="true"] span { color: var(--wine); }
 
 .hint { min-height: 1.2em; margin: 8px 0 0; color: var(--wine); }
+.hint:empty { display: none; }
 
 .nav { justify-content: space-between; }
 

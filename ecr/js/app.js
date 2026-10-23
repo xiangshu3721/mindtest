@@ -1,3 +1,5 @@
+import { mountEcrCloud } from "./cloud-kit.js";
+import { ecrNickname } from "./cloud-payload.js";
 import { OPTIONS, QUESTIONS, REVERSE_ITEMS, SCALE, TYPES } from "./data.js";
 import { formatScore, rushCheck, scoreEcr, scoredValue } from "./score.js";
 
@@ -7,6 +9,7 @@ const REVERSE = new Set(REVERSE_ITEMS);
 
 const state = {
   step: "cover",
+  nickname: "",
   index: 0,
   answers: Array(QUESTIONS.length).fill(null),
   times: Array(QUESTIONS.length).fill(null),
@@ -26,6 +29,7 @@ function load() {
     state.times = Array.isArray(saved.times) && saved.times.length === QUESTIONS.length
       ? saved.times
       : state.times;
+    state.nickname = ecrNickname(saved.nickname);
     state.index = Number.isInteger(saved.index) ? saved.index : 0;
     state.step = saved.step || "cover";
     if (state.step === "report" && complete()) {
@@ -41,6 +45,7 @@ function load() {
 function save() {
   sessionStorage.setItem(STORAGE, JSON.stringify({
     step: state.step,
+    nickname: state.nickname,
     index: state.index,
     answers: state.answers,
     times: state.times,
@@ -77,8 +82,26 @@ function render() {
     report: renderReport,
   }[state.step];
   app.innerHTML = view();
+  if (state.step === "report" && state.result) mountReportCloud();
   const focus = app.querySelector("[data-autofocus]");
   if (focus) focus.focus();
+}
+
+function mountReportCloud() {
+  const slot = app.querySelector("[data-cloud-slot]");
+  if (!slot) return;
+  mountEcrCloud(slot, {
+    nickname: state.nickname,
+    answers: state.answers.slice(),
+    rushed: false,
+  });
+}
+
+function readNickname() {
+  const input = app.querySelector("#nick");
+  if (input) state.nickname = input.value;
+  state.nickname = ecrNickname(state.nickname);
+  return state.nickname;
 }
 
 function shell(inner) {
@@ -105,13 +128,19 @@ function renderCover() {
       <span>所有恋爱经历</span>
       <span>约 8 分钟</span>
     </div>
+    <div class="nick">
+      <label for="nick">怎么称呼你</label>
+      <input id="nick" name="nick" type="text" maxlength="12" autocomplete="off" enterkeyhint="done" value="${esc(state.nickname)}" />
+      <p class="sub">最多 12 个字。这个称呼会写进分享链接。</p>
+    </div>
+    <p class="hint">${esc(state.error)}</p>
     <div class="actions">
       <button class="primary" data-action="start" type="button">开始测评</button>
     </div>
     <h2>两种感觉，四种相处</h2>
     <p class="sub">回避看你对亲近和依赖紧不紧。焦虑看你会不会怕被丢下。两个分数合在一起，归到下面四种里最高的那一型。</p>
     <ol class="types">${types}</ol>
-    <p class="fine">作答和计分都留在这台设备上，不会上传。结果用来看你在亲密关系里的习惯，不是诊断。</p>
+    <p class="fine">计分留在这台设备上，报告也可以打印。进入结果页后会准备一条阅读链接，点「分享结果」才会复制。结果用来看你在亲密关系里的习惯，不是诊断。</p>
   `);
 }
 
@@ -256,11 +285,29 @@ function renderReport() {
       <p>冷漠型 = A×7.3654621 + B×4.9392039 − 22.2281088</p>
       <p>四个数里取最高的一项。这是筛查式的自评，不是诊断。</p>
     </div>
+    <div data-cloud-slot></div>
     <div class="actions">
       <button class="ghost" type="button" data-action="restart">重新测评</button>
       <button class="ghost" type="button" data-action="print">打印报告</button>
     </div>
   `);
+}
+
+function begin() {
+  const name = readNickname();
+  if (!name) {
+    state.error = "先写一个称呼，再开始。";
+    save();
+    render();
+    const field = app.querySelector("#nick");
+    if (field) field.focus();
+    return;
+  }
+  state.nickname = name;
+  state.error = "";
+  state.index = state.answers.findIndex((value) => value == null);
+  if (state.index < 0) state.index = 0;
+  go("test");
 }
 
 function go(step) {
@@ -274,6 +321,7 @@ function go(step) {
 function reset() {
   sessionStorage.removeItem(STORAGE);
   state.step = "cover";
+  state.nickname = "";
   state.index = 0;
   state.answers = Array(QUESTIONS.length).fill(null);
   state.times = Array(QUESTIONS.length).fill(null);
@@ -320,15 +368,23 @@ function finish() {
   go("report");
 }
 
+app.addEventListener("input", (event) => {
+  const input = event.target;
+  if (!input || input.id !== "nick") return;
+  state.nickname = input.value;
+  if (state.error) {
+    state.error = "";
+    const hint = app.querySelector(".hint");
+    if (hint) hint.textContent = "";
+  }
+  save();
+});
+
 app.addEventListener("click", (event) => {
   const button = event.target.closest("[data-action]");
   if (!button || button.disabled) return;
   const action = button.dataset.action;
-  if (action === "start") {
-    state.index = state.answers.findIndex((value) => value == null);
-    if (state.index < 0) state.index = 0;
-    go("test");
-  }
+  if (action === "start") begin();
   if (action === "answer") choose(Number(button.dataset.value));
   if (action === "prev" && state.index > 0) {
     advanceToken += 1;
@@ -358,6 +414,11 @@ app.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (state.step === "cover" && event.key === "Enter" && event.target && event.target.id === "nick") {
+    event.preventDefault();
+    begin();
+    return;
+  }
   if (state.step !== "test") return;
   if (event.target.matches("input, textarea")) return;
   const number = Number(event.key);
@@ -388,6 +449,7 @@ if (debugParams.has("debug")) {
       if (kind === "dismissing") setDimension(6, 2);
       if (kind === "mid") answers.fill(4);
       state.answers = answers;
+      if (!ecrNickname(state.nickname)) state.nickname = "预览";
       state.times = answers.map((_, index) => Date.now() + index * 2000);
       state.result = scoreEcr(answers);
       go("report");
