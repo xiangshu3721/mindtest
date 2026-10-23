@@ -1,18 +1,13 @@
 import { DIMENSIONS, QUESTIONS, TYPES } from "./data.js";
-import { formatScore, scoreEcr } from "./score.js";
+import { scoreEcr } from "./score.js";
 
-export const ECR_VERSION = "ecr-cn-v1";
+export const ECR_VERSION = "ecr-h5-v1";
 export const CONSENT_VERSION = "consent-assessment-ecr-1";
+export const ECR_SCREEN_TEXT = "这是你在恋爱经历里常常有的感觉，不是对某一次吵架的结论，也不是诊断。";
+export const ECR_READER_GAP = "阅读页若尚未重绘 ECR，类型说明在 interpretation、sections 与 textFallback。";
 export const SCHEMA_VERSION = "1.0.0";
 export const ASSESSMENT_ID = "ecr";
-export const ASSESSMENT_NAME = "成人依恋关系测评";
-
-const SCREEN_TEXT = "这是筛查式的自评，不是诊断。";
-const GUIDANCE = [
-  "先看两个均分离 4 有多远。4 是量表从 1 到 7 的中点，不是诊断界值。",
-  "再看四个判别分。最高的一项才是类型，不按“超过 4 分就划进高的一边”来切。",
-  "这是你在恋爱经历里常常有的感觉，不是对某一次吵架的结论，也不能代替两个人具体怎么相处。",
-];
+export const ASSESSMENT_NAME = "亲密关系经历量表 ECR";
 
 function chars(value) {
   return Array.from(String(value || ""));
@@ -37,13 +32,16 @@ function answersOk(list) {
     && list.every((value) => Number.isInteger(value) && value >= 1 && value <= 7);
 }
 
-function axisNote(scored) {
-  const avoid = `${scored.avoidance.name} ${formatScore(scored.avoidance.mean)}，${scored.avoidance.levelLabel}`;
-  const anxiety = `${scored.anxiety.name} ${formatScore(scored.anxiety.mean)}，${scored.anxiety.levelLabel}`;
-  return `${avoid}。${anxiety}。中点是 4 分。`;
+export function ecrFlags(scored) {
+  const flags = [scored.type.id];
+  if (scored.tied) flags.push("tied");
+  if (scored.closeCall) flags.push("close-call");
+  if (scored.nearMidpoint) flags.push("near-midpoint");
+  if (scored.differsFromQuadrant) flags.push("differs-from-quadrant");
+  return flags;
 }
 
-function dimensionView(dimension) {
+export function ecrDimension(dimension) {
   return {
     id: dimension.id,
     name: dimension.name,
@@ -62,46 +60,54 @@ function axisView(dimension) {
   return {
     id: dimension.id,
     name: dimension.name,
-    about: dimension.about,
-    count: dimension.count,
     sum: dimension.sum,
     mean: dimension.mean,
-    score: dimension.mean,
     level: dimension.level,
     levelLabel: dimension.levelLabel,
-    narrative: dimension.narrative,
   };
 }
 
-function typeView(type) {
+export function ecrViewModel(scored, answers, rushed) {
   return {
-    id: type.id,
-    name: type.name,
-    short: type.short,
-    text: type.text,
-    score: type.m,
-    m: type.m,
-    win: type.win,
+    answers: answers.slice(),
+    avoidance: axisView(scored.avoidance),
+    anxiety: axisView(scored.anxiety),
+    types: scored.types.map((type) => ({
+      id: type.id,
+      name: type.name,
+      m: type.m,
+      win: type.win,
+    })),
+    type: {
+      id: scored.type.id,
+      name: scored.type.name,
+      short: scored.type.short,
+    },
+    tied: scored.tied,
+    margin: scored.margin,
+    closeCall: scored.closeCall,
+    nearMidpoint: scored.nearMidpoint,
+    quadrant: scored.quadrant,
+    quadrantName: scored.quadrantName,
+    differsFromQuadrant: scored.differsFromQuadrant,
+    rushed: Boolean(rushed),
   };
 }
 
-function caveats(scored) {
-  const notes = [];
-  if (scored.tied) notes.push("两个类型的判别分相同，并列写在上面。");
-  if (scored.closeCall && !scored.tied) {
-    notes.push(`第一型只比第二型高 ${formatScore(scored.margin)} 分。可以当作倾向，不必当成唯一标签。`);
-  }
-  if (scored.nearMidpoint) notes.push("两个均分都贴着中点。类型仍然按判别分最高的一项给出，风格并不鲜明。");
-  if (scored.differsFromQuadrant) {
-    notes.push(`若只按 4 分切成四格，会落到${scored.quadrantName}。这份量表用判别式，最高的是${scored.type.name}。`);
-  }
-  return notes;
+export function ecrOutcome(scored) {
+  return {
+    headline: `${scored.type.name}：${scored.type.short}`,
+    code: scored.tied ? "tied" : scored.type.id,
+    label: scored.type.name,
+    summary: scored.type.text,
+    flags: ecrFlags(scored),
+  };
 }
 
 /**
  * 把这一次 ECR 收成统一结果协议。
  * 分数只来自 scoreEcr，不在这里另算反向题。性别、年龄和超出 12 字的称呼不进入 payload。
- * 失败返回 null，不上传。
+ * 形状与已部署的 vendor ecr-payload 一致。失败返回 null，不上传。
  */
 export function buildEcrResult(input) {
   const nickname = ecrNickname(input && input.nickname);
@@ -117,76 +123,33 @@ export function buildEcrResult(input) {
   }
 
   const answerCopy = answers.slice();
-  const dimensions = scored.dimensions.map(dimensionView);
-  const types = scored.types.map(typeView);
-  const headline = scored.type.name;
-  const summary = `${axisNote(scored)}${scored.type.short}`;
-  const flags = [];
-  if (scored.tied) flags.push("tied");
-  if (scored.closeCall) flags.push("close");
-  if (scored.nearMidpoint) flags.push("near-midpoint");
-  if (scored.differsFromQuadrant) flags.push("quadrant-differs");
-  const notes = caveats(scored);
+  const outcome = ecrOutcome(scored);
+  const dimensions = scored.dimensions.map(ecrDimension);
+  const rushed = Boolean(input.rushed);
+  const axis = dimensions
+    .map((dimension) => `${dimension.name} ${dimension.score.toFixed(2)}，${dimension.levelLabel}`)
+    .join("。");
   const interpretation = [
-    { id: "type", title: headline, text: scored.type.text },
-    { id: "screen", title: "不是诊断", text: SCREEN_TEXT },
+    { id: "verdict", title: outcome.headline, text: outcome.summary },
+    { id: "screen", title: "筛查不是诊断", text: ECR_SCREEN_TEXT },
   ];
-  for (const dimension of scored.dimensions) {
+  for (const dimension of dimensions) {
     interpretation.push({
       id: dimension.id,
       title: dimension.name,
-      text: `${dimension.levelLabel}，均分 ${formatScore(dimension.mean)}。${dimension.narrative}`,
+      text: `${dimension.levelLabel}，均分 ${dimension.score.toFixed(2)}。${dimension.narrative}`,
     });
   }
-  for (const type of scored.types) {
-    const mark = type.win ? "判别分最高。" : "";
-    interpretation.push({
-      id: type.id,
-      title: type.name,
-      text: `${mark}判别分 ${formatScore(type.m)}。${type.text}`,
-    });
-  }
-  notes.forEach((text, index) => {
-    interpretation.push({ id: `note-${index + 1}`, title: null, text });
-  });
   const recommendations = [
-    { id: "screen", title: null, text: SCREEN_TEXT },
-    ...GUIDANCE.map((text, index) => ({ id: `guide-${index + 1}`, title: null, text })),
+    { id: "screen", title: null, text: ECR_SCREEN_TEXT },
   ];
-  const dimLine = dimensions.map((item) => `${item.name} ${formatScore(item.score)}（${item.levelLabel}）`).join("、");
-  const typeLine = types.map((type) => `${type.name} ${formatScore(type.m)}${type.win ? "（最高）" : ""}`).join("、");
-  const textFallback = [
-    `${headline}。${summary}`,
-    scored.type.text,
-    SCREEN_TEXT,
-    dimLine,
-    typeLine,
-    ...notes,
-    ...GUIDANCE,
-  ].join("");
+  const textFallback = `${outcome.headline}。${axis}。${ECR_SCREEN_TEXT}`;
   const sections = [
-    { t: "h", l: 2, x: headline },
-    { t: "p", x: summary },
-    { t: "p", x: scored.type.text },
-    { t: "p", x: SCREEN_TEXT },
-    {
-      t: "ul",
-      it: [
-        ...dimensions.map((item) => ({
-          x: `${item.name} ${formatScore(item.score)} · ${item.levelLabel}`,
-          d: 0,
-          n: 0,
-        })),
-        ...types.map((type) => ({
-          x: `${type.name} ${formatScore(type.m)}${type.win ? " · 最高" : ""}`,
-          d: 0,
-          n: 0,
-        })),
-      ],
-    },
+    { t: "h", l: 2, x: outcome.headline },
+    { t: "p", x: outcome.summary },
+    { t: "p", x: ECR_SCREEN_TEXT },
+    { t: "p", x: `${axis}。` },
   ];
-  for (const line of notes) sections.push({ t: "p", x: line });
-  for (const line of GUIDANCE) sections.push({ t: "p", x: line });
 
   return {
     reportId: input.reportId,
@@ -196,45 +159,19 @@ export function buildEcrResult(input) {
     nickname,
     completedAt: input.completedAt,
     dimensions,
-    result: {
-      headline,
-      code: scored.type.id,
-      label: headline,
-      summary,
-      flags,
-    },
+    result: outcome,
     interpretation,
     recommendations,
     reportContent: {
       format: "view-model+sections",
-      viewModel: {
-        answers: answerCopy,
-        dimensions: scored.dimensions.map(axisView),
-        avoidance: axisView(scored.avoidance),
-        anxiety: axisView(scored.anxiety),
-        types,
-        type: {
-          id: scored.type.id,
-          name: scored.type.name,
-          short: scored.type.short,
-          text: scored.type.text,
-        },
-        tied: scored.tied,
-        margin: scored.margin,
-        closeCall: scored.closeCall,
-        nearMidpoint: scored.nearMidpoint,
-        quadrant: scored.quadrant,
-        quadrantName: scored.quadrantName,
-        differsFromQuadrant: scored.differsFromQuadrant,
-        rushed: Boolean(input.rushed),
-      },
+      viewModel: ecrViewModel(scored, answerCopy, rushed),
       sections,
       textFallback,
     },
     extensionData: {
       answers: answerCopy.slice(),
       score: scored,
-      quality: { rushed: Boolean(input.rushed) },
+      quality: { rushed },
       consent: {
         agreed: true,
         version: CONSENT_VERSION,
@@ -243,7 +180,7 @@ export function buildEcrResult(input) {
       },
       compat: {
         level: "partial",
-        gaps: ["阅读页若尚未重绘 ECR，类型和两个维度在 interpretation、sections 与 textFallback。"],
+        gaps: [ECR_READER_GAP],
       },
     },
     source: {
